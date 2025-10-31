@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react';
 import type { Invoice } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function InvoicePage() {
   const params = useParams();
@@ -25,8 +27,44 @@ export default function InvoicePage() {
     }
   }, [id, getInvoiceById, isLoading]);
   
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    const invoiceElement = document.getElementById('invoice-preview-container');
+    if (!invoiceElement) return;
+
+    const canvas = await html2canvas(invoiceElement, {
+      scale: 2, // Higher scale for better quality
+      useCORS: true,
+    });
+    
+    const imgData = canvas.toDataURL('image/png');
+    
+    // A4 dimensions in mm
+    const pdfWidth = 210;
+    const pdfHeight = 297;
+
+    const pdf = new jsPDF({
+      orientation: 'p',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const imgWidth = pdfWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pdfHeight;
+
+    while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+    }
+    
+    pdf.save(`Invoice-${invoice?.id}.pdf`);
   };
 
   const handleDownloadExcel = () => {
@@ -71,7 +109,7 @@ export default function InvoicePage() {
   if (isLoading) {
     return (
         <div className="flex flex-col items-center gap-8">
-            <Skeleton className="h-16 w-full max-w-[595px]" />
+            <Skeleton className="h-16 w-full max-w-[800px]" />
             <Skeleton className="h-[842px] w-[595px]" />
         </div>
     );
@@ -91,10 +129,10 @@ export default function InvoicePage() {
                 <FileDown className="mr-2 h-4 w-4" /> Download as Excel
             </Button>
             <Button onClick={handlePrint} className="bg-accent hover:bg-accent/90">
-                <Printer className="mr-2 h-4 w-4" /> Print / Save as PDF
+                <Printer className="mr-2 h-4 w-4" /> Save as PDF
             </Button>
         </div>
-        <div id="invoice-preview" className="flex justify-center">
+        <div id="invoice-preview-container" className="flex justify-center">
             <InvoicePreview invoice={invoice} />
         </div>
     </>

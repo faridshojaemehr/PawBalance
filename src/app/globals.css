@@ -97,7 +97,7 @@
     padding: 0 !important;
     margin: 0 !important;
   }
-  #invoice-preview {
+  #invoice-preview-container {
     display: block !important;
     position: absolute;
     left: 0;
@@ -107,10 +107,10 @@
     padding: 0;
     margin: 0;
   }
-  #invoice-preview .shadow-lg {
+  #invoice-preview-container .shadow-lg {
     box-shadow: none !important;
   }
-  #invoice-preview .w-\[210mm\] {
+  #invoice-preview-container .w-\[210mm\] {
     width: 100% !important;
     height: 100% !important;
   }
