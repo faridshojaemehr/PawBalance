@@ -7,12 +7,13 @@ import { Button } from './ui/button';
 import Link from 'next/link';
 import { Badge } from './ui/badge';
 import { format } from 'date-fns';
-import { FilePlus2, Receipt, Upload, Download } from 'lucide-react';
+import { FilePlus2, Receipt, Upload, Download, Trash2 } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { useRef } from 'react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 export default function InvoiceDashboard() {
-  const { invoices, isLoading, backupData, restoreData } = useInvoices();
+  const { invoices, isLoading, backupData, restoreData, deleteInvoice } = useInvoices();
   const restoreInputRef = useRef<HTMLInputElement>(null);
 
   const getStatusVariant = (status: string) => {
@@ -143,6 +144,28 @@ export default function InvoiceDashboard() {
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`/invoices/${invoice.id}`}>View</Link>
                   </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="ml-2">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete this
+                          invoice and remove its data from the server.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteInvoice(invoice.id)}>
+                          Continue
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </TableCell>
               </TableRow>
             ))}
