@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -21,22 +22,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // Check session storage for auth status on initial load
     const storedAuth = sessionStorage.getItem('isAuthenticated');
-    setIsAuthenticated(storedAuth === 'true');
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true);
+    }
     setIsLoading(false);
   }, []);
   
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-        // Redirect to login if not authenticated, but not if we are already on the login page
-        if (window.location.pathname !== '/login') {
-            router.push('/login');
-        }
+    if (!isLoading && !isAuthenticated && pathname !== '/login') {
+      router.push('/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, pathname]);
 
 
   const login = async (username: string, pass: string) => {

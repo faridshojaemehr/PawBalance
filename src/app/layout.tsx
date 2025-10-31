@@ -5,7 +5,7 @@ import Header from '@/components/header';
 import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
-  title: 'PawSolutions-accountantflow',
+  title: 'PawBalance',
   description: 'Generate, manage, and export professional invoices with ease.',
 };
 

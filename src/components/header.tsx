@@ -44,7 +44,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2 text-xl font-bold text-accent">
             <Image src={logoUrl} alt="Company Logo" width={40} height={40} className="rounded-md object-cover" data-ai-hint="logo" />
-            PawSolutions-accountantflow
+            PawBalance
           </Link>
           <div className="flex items-center gap-4">
             <Button asChild>
