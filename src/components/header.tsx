@@ -14,15 +14,29 @@ export default function Header() {
     if (storedLogo) {
       setLogoUrl(storedLogo);
     }
+    
+    const handleStorageChange = () => {
+        const storedLogo = localStorage.getItem('company-logo');
+        if (storedLogo) {
+            setLogoUrl(storedLogo);
+        }
+    }
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+        window.removeEventListener('storage', handleStorageChange);
+    }
+
   }, []);
 
   return (
     <header className="bg-card border-b sticky top-0 z-10 no-print">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-accent">
+          <Link href="/" className="flex items-center gap-2 text-xl font-bold text-accent">
             <Image src={logoUrl} alt="Company Logo" width={40} height={40} className="rounded-md object-cover" data-ai-hint="logo" />
-            InvoiceFlow
+            PawSolutions-accountantflow
           </Link>
           <Button asChild>
             <Link href="/invoices/new">

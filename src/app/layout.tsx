@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import Header from '@/components/header';
 
 export const metadata: Metadata = {
-  title: 'InvoiceFlow',
+  title: 'PawSolutions-accountantflow',
   description: 'Generate, manage, and export professional invoices with ease.',
 };
 
