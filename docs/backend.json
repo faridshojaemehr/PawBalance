@@ -1,0 +1,197 @@
+{
+    "entities": {
+        "invoice": {
+            "title": "Invoice",
+            "description": "Represents an invoice in the system.",
+            "type": "object",
+            "properties": {
+                "sender": {
+                    "$ref": "#/backend/entities/sender"
+                },
+                "client": {
+                    "$ref": "#/backend/entities/client"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/backend/entities/invoiceItem"
+                    }
+                },
+                "invoiceDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date the invoice was issued."
+                },
+                "dueDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date the invoice is due."
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "paid",
+                        "unpaid",
+                        "draft"
+                    ],
+                    "description": "The status of the invoice."
+                },
+                "notes": {
+                    "type": "string",
+                    "description": "Additional notes on the invoice."
+                },
+                "taxRate": {
+                    "type": "number",
+                    "description": "The tax rate applied to the invoice."
+                },
+                "paymentDetails": {
+                    "$ref": "#/backend/entities/paymentDetails"
+                },
+                "logoUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URL of the company logo."
+                }
+            },
+            "required": [
+                "sender",
+                "client",
+                "items",
+                "invoiceDate",
+                "dueDate",
+                "status"
+            ]
+        },
+        "invoiceItem": {
+            "title": "Invoice Item",
+            "description": "Represents an item on an invoice.",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "description": "Description of the invoice item."
+                },
+                "quantity": {
+                    "type": "number",
+                    "description": "Quantity of the invoice item."
+                },
+                "price": {
+                    "type": "number",
+                    "description": "Price of the invoice item."
+                }
+            },
+            "required": [
+                "description",
+                "quantity",
+                "price"
+            ]
+        },
+        "address": {
+            "title": "Address",
+            "description": "Represents a physical address.",
+            "type": "object",
+            "properties": {
+                "street": {
+                    "type": "string",
+                    "description": "Street address."
+                },
+                "city": {
+                    "type": "string",
+                    "description": "City name."
+                },
+                "state": {
+                    "type": "string",
+                    "description": "State or province."
+                },
+                "zip": {
+                    "type": "string",
+                    "description": "ZIP or postal code."
+                }
+            },
+            "required": [
+                "street",
+                "city",
+                "state",
+                "zip"
+            ]
+        },
+        "client": {
+            "title": "Client",
+            "description": "Represents a client.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the client."
+                },
+                "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address of the client."
+                },
+                "address": {
+                    "$ref": "#/backend/entities/address"
+                }
+            },
+            "required": [
+                "name",
+                "email",
+                "address"
+            ]
+        },
+        "sender": {
+            "title": "Sender",
+            "description": "Represents the sender of an invoice.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the sender."
+                },
+                "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address of the sender."
+                },
+                "address": {
+                    "$ref": "#/backend/entities/address"
+                }
+            },
+            "required": [
+                "name",
+                "email",
+                "address"
+            ]
+        },
+        "paymentDetails": {
+            "title": "Payment Details",
+            "description": "Represents payment details for an invoice.",
+            "type": "object",
+            "properties": {
+                "bankName": {
+                    "type": "string",
+                    "description": "Name of the bank."
+                },
+                "accountName": {
+                    "type": "string",
+                    "description": "Name of the account holder."
+                },
+                "iban": {
+                    "type": "string",
+                    "description": "International Bank Account Number (IBAN)."
+                }
+            }
+        }
+    },
+    "auth": {
+        "providers": []
+    },
+    "firestore": {
+        "/invoices/{invoiceId}": {
+            "schema": {
+                "$ref": "#/backend/entities/invoice"
+            },
+            "description": "Stores individual invoice documents."
+        }
+    }
+}
