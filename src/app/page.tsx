@@ -1,3 +1,7 @@
+'use client';
+
+import InvoiceDashboard from '@/components/invoice-dashboard';
+
 export default function Home() {
-  return <></>;
+  return <InvoiceDashboard />;
 }
