@@ -150,13 +150,13 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
     }
   };
   
-  async function onSubmit(data: InvoiceFormValues) {
+  const onSubmit = async (data: InvoiceFormValues) => {
     const invoiceData = {
       ...data,
       invoiceDate: data.invoiceDate.toISOString(),
       dueDate: data.dueDate.toISOString(),
     };
-  
+
     try {
       if (isEditing && invoice?.id) {
         await updateInvoice(invoice.id, invoiceData);
@@ -169,18 +169,18 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
         const newInvoice = await addInvoice(invoiceData);
         toast({
           title: 'Invoice Saved!',
-          description: `A new invoice has been successfully created.`,
+          description: 'A new invoice has been successfully created.',
         });
         router.push(`/invoices/${newInvoice.id}`);
       }
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "There was a problem with your request.",
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'There was a problem with your request.',
       });
     }
-  }
+  };
 
   return (
     <Form {...form}>
