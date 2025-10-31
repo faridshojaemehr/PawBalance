@@ -26,9 +26,7 @@ export default function InvoicePage() {
   }, [id, getInvoiceById, isLoading]);
   
   const handlePrint = () => {
-    setTimeout(() => {
-        window.print();
-    }, 100);
+    window.print();
   };
 
   const handleDownloadExcel = () => {
@@ -91,11 +89,8 @@ export default function InvoicePage() {
                 <Printer className="mr-2 h-4 w-4" /> Print / Save as PDF
             </Button>
         </div>
-        <div className="printable-area hidden">
+        <div className="printable-area">
              <InvoicePreview invoice={invoice} />
-        </div>
-        <div className="w-full">
-            <InvoicePreview invoice={invoice} />
         </div>
     </div>
   );

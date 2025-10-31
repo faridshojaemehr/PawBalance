@@ -1,17 +1,21 @@
 'use client';
 
 import { useInvoices } from '@/hooks/use-invoices';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Button } from './ui/button';
 import Link from 'next/link';
 import { Badge } from './ui/badge';
 import { format } from 'date-fns';
-import { FilePlus2, Receipt } from 'lucide-react';
+import { FilePlus2, Receipt, Download, Upload } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
+import { useRef } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function InvoiceDashboard() {
-  const { invoices, isLoading } = useInvoices();
+  const { invoices, isLoading, bulkAddInvoices } = useInvoices();
+  const restoreInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -30,6 +34,53 @@ export default function InvoiceDashboard() {
     const subtotal = invoice.items.reduce((acc: number, item: any) => acc + item.quantity * item.price, 0);
     const tax = subtotal * ((invoice.taxRate || 0) / 100);
     return subtotal + tax;
+  };
+
+  const handleBackup = () => {
+    const data = JSON.stringify(invoices, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'invoices-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({
+      title: "Backup Successful",
+      description: "Your invoices have been downloaded.",
+    });
+  };
+
+  const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result;
+          if (typeof content === 'string') {
+            const restoredInvoices = JSON.parse(content);
+            bulkAddInvoices(restoredInvoices);
+            toast({
+              title: "Restore Successful",
+              description: "Your invoices have been restored.",
+            });
+          }
+        } catch (error) {
+          console.error("Failed to parse restore file", error);
+          toast({
+            variant: "destructive",
+            title: "Restore Failed",
+            description: "The selected file is not a valid backup.",
+          });
+        }
+      };
+      reader.readAsText(file);
+    }
+    // Reset file input
+    if (restoreInputRef.current) {
+      restoreInputRef.current.value = '';
+    }
   };
 
   if (isLoading) {
@@ -54,14 +105,25 @@ export default function InvoiceDashboard() {
       <div className="text-center py-20">
         <Receipt className="mx-auto h-12 w-12 text-gray-400" />
         <h3 className="mt-2 text-sm font-medium text-gray-900">No invoices</h3>
-        <p className="mt-1 text-sm text-gray-500">Get started by creating a new invoice.</p>
-        <div className="mt-6">
+        <p className="mt-1 text-sm text-gray-500">Get started by creating a new invoice or restoring from a backup.</p>
+        <div className="mt-6 flex justify-center gap-4">
           <Button asChild>
             <Link href="/invoices/new">
               <FilePlus2 className="mr-2 h-4 w-4" />
               Create Invoice
             </Link>
           </Button>
+          <Button variant="outline" onClick={() => restoreInputRef.current?.click()}>
+            <Upload className="mr-2 h-4 w-4" />
+            Restore from Backup
+          </Button>
+          <input
+            type="file"
+            ref={restoreInputRef}
+            className="hidden"
+            accept=".json"
+            onChange={handleRestore}
+          />
         </div>
       </div>
     );
@@ -108,6 +170,23 @@ export default function InvoiceDashboard() {
           </TableBody>
         </Table>
       </CardContent>
+      <CardFooter className="flex justify-end gap-2">
+         <Button variant="outline" onClick={() => restoreInputRef.current?.click()}>
+            <Upload className="mr-2 h-4 w-4" />
+            Restore Data
+          </Button>
+          <input
+            type="file"
+            ref={restoreInputRef}
+            className="hidden"
+            accept=".json"
+            onChange={handleRestore}
+          />
+        <Button onClick={handleBackup}>
+          <Download className="mr-2 h-4 w-4" />
+          Backup Data
+        </Button>
+      </CardFooter>
     </Card>
   );
 }

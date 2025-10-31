@@ -47,6 +47,10 @@ export function useInvoices() {
     setInvoices((prev) => [...prev, newInvoice]);
     return newInvoice;
   };
+
+  const bulkAddInvoices = (newInvoices: Invoice[]) => {
+    setInvoices(newInvoices);
+  };
   
   const getInvoiceById = (id: string) => {
     return invoices.find((invoice) => invoice.id === id);
@@ -69,6 +73,7 @@ export function useInvoices() {
     isLoading,
     getNewInvoiceId,
     addInvoice,
+    bulkAddInvoices,
     getInvoiceById,
     updateInvoice,
     deleteInvoice,
