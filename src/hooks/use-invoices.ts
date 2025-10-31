@@ -142,25 +142,38 @@ export function useInvoices() {
     reader.onload = async (e) => {
       try {
         const text = e.target?.result;
-        if (typeof text === "string") {
-          const restoredInvoices: Invoice[] = JSON.parse(text);
-          if (Array.isArray(restoredInvoices)) {
-            setInvoices(restoredInvoices);
-            toast({
-              title: "Data Restored Locally",
-              description:
-                "Your invoices have been restored in the app. You may need to save them individually to the server.",
-            });
-          } else {
-            throw new Error("Invalid file format");
-          }
+        if (typeof text !== 'string') {
+          throw new Error('File could not be read.');
         }
-      } catch (error) {
-        console.error("Failed to restore data", error);
+        
+        const restoredInvoices: Invoice[] = JSON.parse(text);
+        if (!Array.isArray(restoredInvoices)) {
+          throw new Error("Invalid file format. Expected an array of invoices.");
+        }
+
+        const response = await fetch('/api/invoices/bulk-update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(restoredInvoices),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to restore invoices on the server.');
+        }
+
+        setInvoices(restoredInvoices);
         toast({
-          variant: "destructive",
-          title: "Restore Failed",
-          description: "The selected file is not valid JSON or is corrupted.",
+            title: 'Data Restored',
+            description: 'Your invoices have been successfully restored and saved to the server.'
+        });
+
+      } catch (error) {
+        console.error('Failed to restore data', error);
+        toast({
+            variant: 'destructive',
+            title: 'Restore Failed',
+            description: (error as Error).message || 'The selected file is not valid or is corrupted.'
         });
       }
     };
