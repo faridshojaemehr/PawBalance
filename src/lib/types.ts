@@ -1,5 +1,4 @@
 export interface InvoiceItem {
-  id: string;
   description: string;
   quantity: number;
   price: number;
@@ -24,6 +23,12 @@ export interface Sender {
   address: Address;
 }
 
+export interface PaymentDetails {
+    bankName?: string;
+    accountName?: string;
+    iban?: string;
+}
+
 export type InvoiceStatus = 'paid' | 'unpaid' | 'draft';
 
 export interface Invoice {
@@ -36,4 +41,5 @@ export interface Invoice {
   status: InvoiceStatus;
   notes?: string;
   taxRate?: number;
+  paymentDetails?: PaymentDetails;
 }

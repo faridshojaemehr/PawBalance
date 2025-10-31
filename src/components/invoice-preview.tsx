@@ -2,6 +2,7 @@ import type { Invoice } from '@/lib/types';
 import { format } from 'date-fns';
 import { Card, CardContent } from './ui/card';
 import { Separator } from './ui/separator';
+import Image from 'next/image';
 
 type InvoicePreviewProps = {
   invoice: Invoice;
@@ -20,13 +21,16 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
   );
 
   return (
-    <Card className="w-[210mm] min-h-[297mm] mx-auto p-8 shadow-lg bg-white text-black">
+    <Card className="w-[210mm] min-h-[297mm] mx-auto p-8 shadow-lg bg-white text-black relative">
       <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">{invoice.sender.name}</h1>
-          <div className="text-gray-600">
-            <AddressDisplay address={invoice.sender.address} />
-            <p>{invoice.sender.email}</p>
+        <div className="flex items-center gap-4">
+          <Image src="https://picsum.photos/seed/logo/60/60" alt="Company Logo" width={60} height={60} className="rounded-md" data-ai-hint="logo" />
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">{invoice.sender.name}</h1>
+            <div className="text-gray-600">
+              <AddressDisplay address={invoice.sender.address} />
+              <p>{invoice.sender.email}</p>
+            </div>
           </div>
         </div>
         <div className="text-right">
@@ -70,8 +74,8 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
           </tr>
         </thead>
         <tbody>
-          {invoice.items.map((item) => (
-            <tr key={item.id} className="border-b border-gray-100">
+          {invoice.items.map((item, index) => (
+            <tr key={index} className="border-b border-gray-100">
               <td className="p-3">{item.description}</td>
               <td className="p-3 text-center">{item.quantity}</td>
               <td className="p-3 text-right">${item.price.toFixed(2)}</td>
@@ -81,16 +85,36 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
         </tbody>
       </table>
 
-      <div className="flex justify-end mt-8">
+      <div className="flex justify-between items-start mt-8">
+        <div className="w-1/2">
+            {invoice.paymentDetails && (invoice.paymentDetails.bankName || invoice.paymentDetails.accountName || invoice.paymentDetails.iban) && (
+                 <div className="mt-8">
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase">Payment Details</h4>
+                    <div className="text-sm text-gray-600 mt-2 space-y-1">
+                        {invoice.paymentDetails.bankName && <p><strong>Bank:</strong> {invoice.paymentDetails.bankName}</p>}
+                        {invoice.paymentDetails.accountName && <p><strong>Account Name:</strong> {invoice.paymentDetails.accountName}</p>}
+                        {invoice.paymentDetails.iban && <p><strong>IBAN:</strong> {invoice.paymentDetails.iban}</p>}
+                    </div>
+                </div>
+            )}
+            {invoice.notes && (
+                <div className="mt-8">
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase">Notes</h4>
+                    <p className="text-sm text-gray-600 mt-2">{invoice.notes}</p>
+                </div>
+            )}
+        </div>
         <div className="w-full max-w-xs space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Subtotal</span>
             <span className="text-gray-800">${subtotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Tax ({invoice.taxRate || 0}%)</span>
-            <span className="text-gray-800">${tax.toFixed(2)}</span>
-          </div>
+          {invoice.taxRate && invoice.taxRate > 0 ? (
+            <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Tax ({invoice.taxRate || 0}%)</span>
+                <span className="text-gray-800">${tax.toFixed(2)}</span>
+            </div>
+           ) : null}
           <Separator />
           <div className="flex justify-between font-bold text-lg">
             <span className="text-gray-800">Total</span>
@@ -98,13 +122,6 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
           </div>
         </div>
       </div>
-
-      {invoice.notes && (
-        <div className="mt-12">
-            <h4 className="text-sm font-semibold text-gray-500 uppercase">Notes</h4>
-            <p className="text-sm text-gray-600 mt-2">{invoice.notes}</p>
-        </div>
-      )}
 
       <footer className="absolute bottom-8 left-8 right-8 text-center text-xs text-gray-400">
         <p>Thank you for your business!</p>

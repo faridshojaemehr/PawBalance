@@ -31,12 +31,19 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { useEffect } from 'react';
+import type { Invoice } from '@/lib/types';
 
 const addressSchema = z.object({
   street: z.string().min(1, 'Street is required'),
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
   zip: z.string().min(1, 'ZIP code is required'),
+});
+
+const paymentDetailsSchema = z.object({
+  iban: z.string().optional(),
+  accountName: z.string().optional(),
+  bankName: z.string().optional(),
 });
 
 const formSchema = z.object({
@@ -60,15 +67,21 @@ const formSchema = z.object({
   })).min(1, 'At least one item is required'),
   notes: z.string().optional(),
   taxRate: z.coerce.number().min(0, 'Tax rate cannot be negative').optional(),
+  paymentDetails: paymentDetailsSchema.optional(),
 });
 
 type InvoiceFormValues = z.infer<typeof formSchema>;
 
-export default function InvoiceForm() {
+interface InvoiceFormProps {
+  invoice?: Invoice;
+}
+
+export default function InvoiceForm({ invoice }: InvoiceFormProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { addInvoice, getNewInvoiceId } = useInvoices();
+  const { addInvoice, updateInvoice, getNewInvoiceId } = useInvoices();
   const newInvoiceId = getNewInvoiceId();
+  const isEditing = !!invoice;
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(formSchema),
@@ -81,8 +94,20 @@ export default function InvoiceForm() {
       items: [{ description: '', quantity: 1, price: 0 }],
       notes: '',
       taxRate: 0,
+      paymentDetails: { iban: '', accountName: '', bankName: '' },
     },
   });
+  
+  useEffect(() => {
+    if (invoice) {
+      form.reset({
+        ...invoice,
+        invoiceDate: new Date(invoice.invoiceDate),
+        dueDate: new Date(invoice.dueDate),
+        items: invoice.items.map(item => ({...item})) // remove id
+      });
+    }
+  }, [invoice, form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -97,25 +122,35 @@ export default function InvoiceForm() {
   const total = subtotal + tax;
   
   function onSubmit(data: InvoiceFormValues) {
-    const newInvoice = addInvoice({
-      ...data,
-      invoiceDate: data.invoiceDate.toISOString(),
-      dueDate: data.dueDate.toISOString(),
-    });
-    toast({
-      title: 'Invoice Saved!',
-      description: `Invoice ${newInvoice.id} has been successfully created.`,
-    });
-    router.push(`/invoices/${newInvoice.id}`);
+    const invoiceData = {
+        ...data,
+        invoiceDate: data.invoiceDate.toISOString(),
+        dueDate: data.dueDate.toISOString(),
+    };
+    if (isEditing && invoice) {
+        updateInvoice(invoice.id, invoiceData);
+        toast({
+            title: 'Invoice Updated!',
+            description: `Invoice ${invoice.id} has been successfully updated.`,
+        });
+        router.push(`/invoices/${invoice.id}`);
+    } else {
+        const newInvoice = addInvoice(invoiceData);
+        toast({
+            title: 'Invoice Saved!',
+            description: `Invoice ${newInvoice.id} has been successfully created.`,
+        });
+        router.push(`/invoices/${newInvoice.id}`);
+    }
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">New Invoice ({newInvoiceId})</h1>
+            <h1 className="text-3xl font-bold">{isEditing ? `Edit Invoice (${invoice?.id})` : `New Invoice (${newInvoiceId})`}</h1>
             <Button type="submit" className="bg-accent hover:bg-accent/90">
-                <Save className="mr-2 h-4 w-4" /> Save Invoice
+                <Save className="mr-2 h-4 w-4" /> {isEditing ? 'Update Invoice' : 'Save Invoice'}
             </Button>
         </div>
 
@@ -177,7 +212,7 @@ export default function InvoiceForm() {
             <CardContent className="grid md:grid-cols-3 gap-8">
                 <FormField name="status" control={form.control} render={({ field }) => (
                     <FormItem><FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="draft">Draft</SelectItem>
@@ -262,14 +297,30 @@ export default function InvoiceForm() {
         </Card>
         
         <div className="grid md:grid-cols-2 gap-8">
-            <Card>
-                <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
-                <CardContent>
-                    <FormField name="notes" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Additional Notes</FormLabel><FormControl><Textarea {...field} placeholder="Thank you for your business!" /></FormControl><FormMessage /></FormItem>
-                    )} />
-                </CardContent>
-            </Card>
+            <div className="space-y-8">
+                <Card>
+                    <CardHeader><CardTitle>Payment Details</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                        <FormField name="paymentDetails.bankName" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Bank Name</FormLabel><FormControl><Input {...field} placeholder="e.g. Global Bank" /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="paymentDetails.accountName" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Account Name</FormLabel><FormControl><Input {...field} placeholder="e.g. Acme Inc." /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="paymentDetails.iban" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>IBAN</FormLabel><FormControl><Input {...field} placeholder="e.g. DE89 3704 0044 0532 0130 00" /></FormControl><FormMessage /></FormItem>
+                        )} />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
+                    <CardContent>
+                        <FormField name="notes" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Additional Notes</FormLabel><FormControl><Textarea {...field} placeholder="Thank you for your business!" /></FormControl><FormMessage /></FormItem>
+                        )} />
+                    </CardContent>
+                </Card>
+            </div>
             <div className="space-y-4">
                  <Card>
                     <CardHeader><CardTitle>Tax</CardTitle></CardHeader>

@@ -41,7 +41,7 @@ export default function InvoicePage() {
   return (
     <div className="flex flex-col items-center gap-8">
         <div className="w-full max-w-[595px] flex justify-end gap-2 no-print">
-            <Button variant="outline" onClick={() => router.push(`/invoices/new`)}>
+            <Button variant="outline" onClick={() => router.push(`/invoices/${invoice.id}/edit`)}>
                 <Edit className="mr-2 h-4 w-4" /> Edit
             </Button>
             <Button onClick={handlePrint} className="bg-accent hover:bg-accent/90">
