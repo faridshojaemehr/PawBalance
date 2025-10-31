@@ -44,3 +44,13 @@ export interface Invoice {
   paymentDetails?: PaymentDetails;
   logoUrl?: string;
 }
+
+export interface Expense {
+  id: string;
+  itemName: string;
+  purchaseDate: string; // ISO 8601 date string
+  vendor: string;
+  amount: number;
+  category: string;
+  receiptUrl?: string;
+}

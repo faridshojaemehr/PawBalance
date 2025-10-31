@@ -35,6 +35,12 @@ export default function Header() {
             PawBalance
           </Link>
           <div className="flex items-center gap-4">
+            <Button variant="ghost" asChild>
+                <Link href="/">Invoices</Link>
+            </Button>
+            <Button variant="ghost" asChild>
+                <Link href="/expenses">Expenses</Link>
+            </Button>
             <Button asChild>
               <Link href="/invoices/new">
                 <FilePlus2 className="mr-2 h-4 w-4" />
