@@ -13,11 +13,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const hardcodedUser = {
-  username: 'farid@PS',
-  pass: '@7klPk2h(Q3eoMSK',
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,12 +36,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   const login = async (username: string, pass: string) => {
-    if (username === hardcodedUser.username && pass === hardcodedUser.pass) {
-      sessionStorage.setItem('isAuthenticated', 'true');
-      setIsAuthenticated(true);
-      return true;
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password: pass }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          sessionStorage.setItem('isAuthenticated', 'true');
+          setIsAuthenticated(true);
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Login request failed:', error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {

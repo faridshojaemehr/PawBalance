@@ -1,7 +1,7 @@
 'use client';
 
 import type { Invoice } from '@/lib/types';
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState } from "react";
 import { useToast } from './use-toast';
 
 export function useInvoices() {
@@ -10,43 +10,56 @@ export function useInvoices() {
   const { toast } = useToast();
 
   useEffect(() => {
-    try {
-      const storedInvoices = localStorage.getItem('invoices');
-      if (storedInvoices) {
-        setInvoices(JSON.parse(storedInvoices));
+    const fetchInvoices = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api/invoices");
+        if (!response.ok) {
+          throw new Error("Failed to fetch invoices");
+        }
+        const data = await response.json();
+        setInvoices(data);
+      } catch (error) {
+        console.error(error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load your invoices.",
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to parse invoices from localStorage', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not load your saved invoices.',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    fetchInvoices();
   }, [toast]);
 
-  const saveInvoicesToStorage = useCallback((invoicesToSave: Invoice[]) => {
+  const addInvoice = async (invoice: Omit<Invoice, "id">) => {
     try {
-      const invoicesJson = JSON.stringify(invoicesToSave);
-      localStorage.setItem('invoices', invoicesJson);
-    } catch (error) {
-      console.error('Failed to save invoices to localStorage', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not save your changes.',
+      const response = await fetch("/api/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(invoice),
       });
+      if (!response.ok) {
+        throw new Error("Failed to create invoice");
+      }
+      const newInvoice = await response.json();
+      setInvoices((prev) => [...prev, newInvoice]);
+      toast({
+        title: "Invoice Created",
+        description: "Your new invoice has been saved.",
+      });
+      return newInvoice;
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "There was a problem creating your invoice.",
+      });
+      return null;
     }
-  }, [toast]);
-
-  const addInvoice = async (invoice: Omit<Invoice, 'id'>) => {
-    const newInvoice = { ...invoice, id: `INV-${Date.now()}` };
-    const updatedInvoices = [...invoices, newInvoice];
-    setInvoices(updatedInvoices);
-    saveInvoicesToStorage(updatedInvoices);
-    return newInvoice;
   };
 
   const getInvoiceById = (id: string) => {
@@ -54,20 +67,65 @@ export function useInvoices() {
   };
 
   const updateInvoice = async (id: string, updatedInvoiceData: Partial<Omit<Invoice, 'id'>>) => {
-    const updatedInvoices = invoices.map((inv) =>
-      inv.id === id ? { ...inv, ...updatedInvoiceData, id } : inv
-    );
-    setInvoices(updatedInvoices);
-    saveInvoicesToStorage(updatedInvoices);
+    try {
+      const response = await fetch(`/api/invoices/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedInvoiceData),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update invoice");
+      }
+      const updatedInvoice = await response.json();
+      setInvoices((prev) =>
+        prev.map((inv) => (inv.id === id ? updatedInvoice : inv))
+      );
+      toast({
+        title: "Invoice Updated",
+        description: "Your invoice has been successfully updated.",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "There was a problem updating your invoice.",
+      });
+    }
   };
   
   const deleteInvoice = async (id: string) => {
-    const updatedInvoices = invoices.filter(inv => inv.id !== id);
-    setInvoices(updatedInvoices);
-    saveInvoicesToStorage(updatedInvoices);
+    try {
+      const response = await fetch(`/api/invoices/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete invoice");
+      }
+      setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+      toast({
+        title: "Invoice Deleted",
+        description: "Your invoice has been deleted.",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "There was a problem deleting your invoice.",
+      });
+    }
   };
 
   const backupData = () => {
+    if (invoices.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Data",
+        description: "There is no data to back up.",
+      });
+      return;
+    }
     const dataStr = JSON.stringify(invoices, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
     
@@ -81,30 +139,29 @@ export function useInvoices() {
 
   const restoreData = (file: File) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const text = e.target?.result;
-        if (typeof text === 'string') {
-          const restoredInvoices = JSON.parse(text);
-          // Basic validation
+        if (typeof text === "string") {
+          const restoredInvoices: Invoice[] = JSON.parse(text);
           if (Array.isArray(restoredInvoices)) {
             setInvoices(restoredInvoices);
-            saveInvoicesToStorage(restoredInvoices);
             toast({
-                title: 'Data Restored',
-                description: 'Your invoices have been successfully restored.'
-            })
+              title: "Data Restored Locally",
+              description:
+                "Your invoices have been restored in the app. You may need to save them individually to the server.",
+            });
           } else {
             throw new Error("Invalid file format");
           }
         }
       } catch (error) {
-        console.error('Failed to restore data', error);
+        console.error("Failed to restore data", error);
         toast({
-            variant: 'destructive',
-            title: 'Restore Failed',
-            description: 'The selected file is not valid JSON or is corrupted.'
-        })
+          variant: "destructive",
+          title: "Restore Failed",
+          description: "The selected file is not valid JSON or is corrupted.",
+        });
       }
     };
     reader.readAsText(file);

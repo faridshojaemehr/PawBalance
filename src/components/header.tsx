@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { usePathname } from 'next/navigation';
 
 export default function Header() {
-  const [logoUrl, setLogoUrl] = useState("https://picsum.photos/seed/logo/40/40");
+  const [logoUrl, setLogoUrl] = useState("src/img/logo-s-t.png");
   const { isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
 
