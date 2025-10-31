@@ -69,7 +69,12 @@ export default function InvoicePage() {
   };
 
   if (isLoading) {
-    return <Skeleton className="h-[842px] w-[595px] mx-auto" />;
+    return (
+        <div className="flex flex-col items-center gap-8">
+            <Skeleton className="h-16 w-full max-w-[595px]" />
+            <Skeleton className="h-[842px] w-[595px]" />
+        </div>
+    );
   }
 
   if (!invoice) {
@@ -77,8 +82,8 @@ export default function InvoicePage() {
   }
   
   return (
-    <div className="flex flex-col items-center gap-8">
-        <div className="w-full max-w-[595px] flex justify-end gap-2 no-print">
+    <>
+        <div className="w-full max-w-[595px] mx-auto flex justify-end gap-2 no-print mb-8">
             <Button variant="outline" onClick={() => router.push(`/invoices/${invoice.id}/edit`)}>
                 <Edit className="mr-2 h-4 w-4" /> Edit
             </Button>
@@ -89,9 +94,12 @@ export default function InvoicePage() {
                 <Printer className="mr-2 h-4 w-4" /> Print / Save as PDF
             </Button>
         </div>
-        <div className="printable-area">
+        <div className="printable-area hidden">
              <InvoicePreview invoice={invoice} />
         </div>
-    </div>
+        <div className="no-print flex justify-center">
+            <InvoicePreview invoice={invoice} />
+        </div>
+    </>
   );
 }
