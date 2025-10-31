@@ -52,5 +52,6 @@ export interface Expense {
   vendor: string;
   amount: number;
   category: string;
+  description?: string; // Added description field
   receiptUrl?: string;
 }

@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Button } from './ui/button';
 import Link from 'next/link';
 import { Badge } from './ui/badge';
+import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { FilePlus2, Receipt, Upload, Download, Trash2 } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
@@ -118,7 +119,7 @@ export default function InvoiceDashboard() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">Invoice #</TableHead>
+              <TableHead className="w-[200px]">Invoice #</TableHead>
               <TableHead>Client</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
@@ -138,7 +139,7 @@ export default function InvoiceDashboard() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  ${calculateTotal(invoice).toFixed(2)}
+                  {formatCurrency(calculateTotal(invoice))}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="outline" size="sm" asChild>

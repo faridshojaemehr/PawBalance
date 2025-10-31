@@ -1,42 +1,34 @@
 
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
-import type { Expense } from '@/lib/types';
+import { PrismaClient } from '@/generated/prisma/client';
 
-const expensesFilePath = path.join(process.cwd(), 'data', 'expenses.json');
-
-interface ExpenseData {
-  lastExpenseNumber: number;
-  expenses: Expense[];
-}
-
-async function readExpenseData(): Promise<ExpenseData> {
-  try {
-    const data = await fs.readFile(expensesFilePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return { lastExpenseNumber: 0, expenses: [] };
-    }
-    throw error;
-  }
-}
-
-async function writeExpenseData(data: ExpenseData) {
-  await fs.writeFile(expensesFilePath, JSON.stringify(data, null, 2));
-}
+const prisma = new PrismaClient();
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const data = await readExpenseData();
-    const expense = data.expenses.find(exp => exp.id === params.id);
+    const { id } = params;
+    const authenticatedUserId = request.headers.get('x-user-id');
+    const authenticatedUserRole = request.headers.get('x-user-role');
 
-    if (expense) {
-      return NextResponse.json(expense);
-    } else {
+    if (!authenticatedUserId || !authenticatedUserRole) {
+      return NextResponse.json({ message: 'Authentication required' }, { status: 401 });
+    }
+
+    const expense = await prisma.expense.findUnique({
+      where: { id },
+      include: { user: true }, // Include the user relation
+    });
+
+    if (!expense) {
       return NextResponse.json({ message: 'Expense not found.' }, { status: 404 });
     }
+
+    // Authorization: User can view their own expense or if they are an ADMIN
+    if (expense.userId !== authenticatedUserId && authenticatedUserRole !== 'ADMIN') {
+      return NextResponse.json({ message: 'Unauthorized to view this expense.' }, { status: 403 });
+    }
+
+    return NextResponse.json(expense);
   } catch (error) {
     console.error(`Failed to read expense ${params.id}:`, error);
     return NextResponse.json({ message: 'Failed to load expense.' }, { status: 500 });
@@ -45,19 +37,36 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const updatedExpenseData = await request.json();
-    const data = await readExpenseData();
-    
-    const expenseIndex = data.expenses.findIndex(exp => exp.id === params.id);
+    const { id } = params;
+    const authenticatedUserId = request.headers.get('x-user-id');
+    const authenticatedUserRole = request.headers.get('x-user-role');
 
-    if (expenseIndex === -1) {
+    if (!authenticatedUserId || !authenticatedUserRole) {
+      return NextResponse.json({ message: 'Authentication required' }, { status: 401 });
+    }
+
+    const existingExpense = await prisma.expense.findUnique({
+      where: { id },
+    });
+
+    if (!existingExpense) {
       return NextResponse.json({ message: 'Expense not found.' }, { status: 404 });
     }
 
-    data.expenses[expenseIndex] = { ...data.expenses[expenseIndex], ...updatedExpenseData, id: params.id };
-    await writeExpenseData(data);
+    // Authorization: User can update their own expense or if they are an ADMIN
+    if (existingExpense.userId !== authenticatedUserId && authenticatedUserRole !== 'ADMIN') {
+      return NextResponse.json({ message: 'Unauthorized to update this expense.' }, { status: 403 });
+    }
 
-    return NextResponse.json(data.expenses[expenseIndex]);
+    const updatedExpenseData = await request.json();
+
+    const updatedExpense = await prisma.expense.update({
+      where: { id },
+      data: updatedExpenseData,
+      include: { user: true }, // Include the user relation in the response
+    });
+
+    return NextResponse.json(updatedExpense);
   } catch (error) {
     console.error(`Failed to update expense ${params.id}:`, error);
     return NextResponse.json({ message: 'Failed to update expense.' }, { status: 500 });
@@ -66,15 +75,30 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const data = await readExpenseData();
-    const expenseExists = data.expenses.some(exp => exp.id === params.id);
+    const { id } = params;
+    const authenticatedUserId = request.headers.get('x-user-id');
+    const authenticatedUserRole = request.headers.get('x-user-role');
 
-    if (!expenseExists) {
+    if (!authenticatedUserId || !authenticatedUserRole) {
+      return NextResponse.json({ message: 'Authentication required' }, { status: 401 });
+    }
+
+    const existingExpense = await prisma.expense.findUnique({
+      where: { id },
+    });
+
+    if (!existingExpense) {
       return NextResponse.json({ message: 'Expense not found.' }, { status: 404 });
     }
 
-    data.expenses = data.expenses.filter(exp => exp.id !== params.id);
-    await writeExpenseData(data);
+    // Authorization: User can delete their own expense or if they are an ADMIN
+    if (existingExpense.userId !== authenticatedUserId && authenticatedUserRole !== 'ADMIN') {
+      return NextResponse.json({ message: 'Unauthorized to delete this expense.' }, { status: 403 });
+    }
+
+    await prisma.expense.delete({
+      where: { id },
+    });
 
     return new NextResponse(null, { status: 204 }); // No Content
   } catch (error) {

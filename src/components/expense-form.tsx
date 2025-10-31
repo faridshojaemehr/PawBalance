@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +24,7 @@ import { cn } from '@/lib/utils';
 import type { Expense } from '@/lib/types';
 import { useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   itemName: z.string().min(2, { message: 'Item name must be at least 2 characters.' }),
@@ -30,6 +32,7 @@ const formSchema = z.object({
   purchaseDate: z.date(),
   category: z.string().min(2, { message: 'Category must be at least 2 characters.' }),
   amount: z.coerce.number().positive({ message: 'Amount must be a positive number.' }),
+  description: z.string().optional(),
   receiptUrl: z.string().optional(),
 });
 
@@ -51,12 +54,14 @@ export function ExpenseForm({ onSubmit, initialData }: ExpenseFormProps) {
         ...initialData,
         purchaseDate: new Date(initialData.purchaseDate),
         amount: Number(initialData.amount),
+        description: initialData.description || '',
     } : {
         itemName: '',
         vendor: '',
         purchaseDate: new Date(),
         category: '',
         amount: 0,
+        description: '',
         receiptUrl: '',
     },
   });
@@ -184,7 +189,23 @@ export function ExpenseForm({ onSubmit, initialData }: ExpenseFormProps) {
             <FormItem>
               <FormLabel>Amount</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="e.g., 2499.99" {...field} />
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">€</span>
+                  <Input type="number" placeholder="e.g., 2499.99" className="pl-7" {...field} />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder="e.g., Details about the expense" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

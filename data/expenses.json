@@ -1,4 +1,14 @@
 {
-  "lastExpenseNumber": 0,
-  "expenses": []
+  "lastExpenseNumber": 1,
+  "expenses": [
+    {
+      "itemName": "Mac Mini M4",
+      "vendor": "Apple Store",
+      "purchaseDate": "2024-12-30T22:00:00.000Z",
+      "category": "Hardware",
+      "amount": 859,
+      "receiptUrl": "",
+      "id": "EXP-001"
+    }
+  ]
 }

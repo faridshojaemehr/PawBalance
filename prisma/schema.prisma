@@ -51,8 +51,10 @@ model Expense {
   user        User      @relation(fields: [userId], references: [id])
   amount      Float
   description String?
+  itemName    String
+  vendor      String
   category    String
-  date        DateTime
-  createdAt   DateTime  @default(now())
+  purchaseDate DateTime
   updatedAt   DateTime  @updatedAt
+  receiptUrl  String? // Add this line for the receipt URL
 }

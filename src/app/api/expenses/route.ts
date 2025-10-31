@@ -1,63 +1,42 @@
 
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
-import type { Expense } from '@/lib/types';
+import { PrismaClient } from '@/generated/prisma/client';
 
-const expensesFilePath = path.join(process.cwd(), 'data', 'expenses.json');
-
-interface ExpenseData {
-  lastExpenseNumber: number;
-  expenses: Expense[];
-}
-
-async function readExpenseData(): Promise<ExpenseData> {
-  try {
-    const data = await fs.readFile(expensesFilePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return { lastExpenseNumber: 0, expenses: [] };
-    }
-    throw error;
-  }
-}
-
-async function writeExpenseData(data: ExpenseData) {
-  await fs.writeFile(expensesFilePath, JSON.stringify(data, null, 2));
-}
+const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const data = await readExpenseData();
-    return NextResponse.json(data.expenses);
+    const expenses = await prisma.expense.findMany({
+      include: { user: true }, // Include the user relation
+    });
+    return NextResponse.json(expenses);
   } catch (error) {
-    console.error('Failed to read expenses:', error);
+    console.error('Failed to fetch expenses:', error);
     return NextResponse.json({ message: 'Failed to load expenses.' }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const authenticatedUserId = request.headers.get('x-user-id');
+
+    if (!authenticatedUserId) {
+      return NextResponse.json({ message: 'Authentication required: User ID not found in headers.' }, { status: 401 });
+    }
+
     const newExpenseData = await request.json();
-    const data = await readExpenseData();
 
-    const newExpenseNumber = data.lastExpenseNumber + 1;
-    const paddedExpenseNumber = String(newExpenseNumber).padStart(3, '0');
-
-    const newExpense: Expense = {
-      ...newExpenseData,
-      id: `EXP-${paddedExpenseNumber}`,
-    };
-
-    data.expenses.push(newExpense);
-    data.lastExpenseNumber = newExpenseNumber;
-
-    await writeExpenseData(data);
+    const newExpense = await prisma.expense.create({
+      data: {
+        ...newExpenseData,
+        userId: authenticatedUserId,
+      },
+      include: { user: true }, // Include the user relation in the response
+    });
 
     return NextResponse.json(newExpense, { status: 201 });
   } catch (error) {
     console.error('Failed to create expense:', error);
-    return NextResponse.json({ message: 'Failed to create expense.' }, { status: 500 });
+    return NextResponse.json({ message: 'Failed to create expense.', error: error.message }, { status: 500 });
   }
 }

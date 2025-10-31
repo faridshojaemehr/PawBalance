@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { formatCurrency } from '@/lib/utils';
 
 export default function InvoicePage() {
   const params = useParams();
@@ -35,13 +36,11 @@ export default function InvoicePage() {
     document.body.classList.add('print-active');
 
     const canvas = await html2canvas(invoiceElement, {
-      scale: 3, // Higher scale for better quality
+      scale: 4, // Increased scale for even better quality
       useCORS: true,
       logging: true,
-      width: invoiceElement.offsetWidth,
-      height: invoiceElement.offsetHeight,
-      windowWidth: document.documentElement.offsetWidth,
-      windowHeight: document.documentElement.offsetHeight,
+      windowWidth: invoiceElement.scrollWidth, // Use scrollWidth for full content width
+      windowHeight: invoiceElement.scrollHeight, // Use scrollHeight for full content height
     });
     
     // Remove print-specific styles
@@ -94,9 +93,9 @@ export default function InvoicePage() {
     const total = subtotal + tax;
     
     const summaryData = [
-        { Item: 'Subtotal', Amount: subtotal },
-        { Item: `Tax (${invoice.taxRate || 0}%)`, Amount: tax },
-        { Item: 'Total', Amount: total },
+        { Item: 'Subtotal', Amount: formatCurrency(subtotal) },
+        { Item: `Tax (${invoice.taxRate || 0}%)`, Amount: formatCurrency(tax) },
+        { Item: 'Total', Amount: formatCurrency(total) },
     ];
 
     const clientInfo = [

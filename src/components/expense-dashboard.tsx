@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Button } from './ui/button';
 import Link from 'next/link';
+import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { FilePlus2, Receipt, Trash2, Paperclip } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
@@ -80,7 +81,7 @@ export default function ExpenseDashboard() {
                 <TableCell>{format(new Date(expense.purchaseDate), 'MMM d, yyyy')}</TableCell>
                 <TableCell>{expense.category}</TableCell>
                 <TableCell className="text-right">
-                  ${expense.amount.toFixed(2)}
+                  {formatCurrency(expense.amount)}
                 </TableCell>
                 <TableCell className="text-right">
                   {expense.receiptUrl && (
@@ -90,9 +91,12 @@ export default function ExpenseDashboard() {
                       </a>
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/expenses/${expense.id}/edit`}>Edit</Link>
+                  <Button variant="outline" size="sm" asChild className="mr-2">
+                    <Link href={`/expenses/${expense.id}`}>View</Link>
                   </Button>
+                  {/* <Button variant="outline" size="sm" asChild>
+                    <Link href={`/expenses/${expense.id}/edit`}>Edit</Link>
+                  </Button> */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="destructive" size="sm" className="ml-2">

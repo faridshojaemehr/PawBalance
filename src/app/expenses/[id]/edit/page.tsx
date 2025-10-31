@@ -1,18 +1,17 @@
-
 'use client';
 
-import { ExpenseForm } from '@/components/expense-form';
+import { useParams, useRouter } from 'next/navigation';
 import { useExpenses } from '@/hooks/use-expenses';
-import { useRouter, useParams } from 'next/navigation';
+import { ExpenseForm } from '@/components/expense-form';
 import { useEffect, useState } from 'react';
 import type { Expense } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function EditExpensePage() {
-  const { getExpenseById, updateExpense, isLoading } = useExpenses();
-  const router = useRouter();
   const params = useParams();
+  const router = useRouter();
+  const { getExpenseById, updateExpense, isLoading } = useExpenses();
   const [expense, setExpense] = useState<Expense | undefined>(undefined);
 
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -24,25 +23,41 @@ export default function EditExpensePage() {
     }
   }, [id, getExpenseById, isLoading]);
 
-  const handleSubmit = async (values: any) => {
-    if (!id) return;
-    await updateExpense(id, values);
-    router.push('/expenses');
+  const handleSubmit = async (values: Omit<Expense, 'id'>) => {
+    if (id) {
+      await updateExpense(id, values);
+      router.push(`/expenses/${id}`);
+    }
   };
 
-  if (isLoading || !expense) {
+  if (isLoading) {
     return (
-        <Card className="max-w-2xl mx-auto">
-            <CardHeader>
-                <Skeleton className="h-8 w-1/2" />
-            </CardHeader>
-            <CardContent className="space-y-8">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-            </CardContent>
-        </Card>
-    )
+      <Card>
+        <CardHeader>
+          <CardTitle>Loading Expense...</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[200px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!expense && !isLoading) {
+    return <div className="text-center py-20">Expense not found.</div>;
+  }
+
+  if (!expense) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Loading Expense...</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[200px] w-full" />
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
