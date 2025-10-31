@@ -32,7 +32,7 @@ export interface PaymentDetails {
 export type InvoiceStatus = 'paid' | 'unpaid' | 'draft';
 
 export interface Invoice {
-  id: string; // Auto-generated invoice number
+  id: string; // Firestore document ID
   sender: Sender;
   client: Client;
   items: InvoiceItem[];

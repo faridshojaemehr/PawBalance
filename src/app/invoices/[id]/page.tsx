@@ -115,10 +115,19 @@ export default function InvoicePage() {
     );
   }
 
-  if (!invoice) {
+  if (!invoice && !isLoading) {
     return <div className="text-center py-20">Invoice not found.</div>;
   }
   
+  if (!invoice) {
+      return (
+        <div className="flex flex-col items-center gap-8">
+            <Skeleton className="h-16 w-full max-w-[800px]" />
+            <Skeleton className="h-[842px] w-[595px]" />
+        </div>
+      )
+  }
+
   return (
     <>
         <div className="no-print w-full max-w-[800px] mx-auto flex justify-end gap-2 mb-8">

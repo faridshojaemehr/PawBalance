@@ -1,79 +1,42 @@
 'use client';
 
 import type { Invoice } from '@/lib/types';
-import { useState, useEffect, useCallback } from 'react';
-
-const INVOICES_STORAGE_KEY = 'invoices';
+import { useState, useMemo } from 'react';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export function useInvoices() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const firestore = useFirestore();
+  const invoicesCollection = useMemo(() => firestore ? collection(firestore, 'invoices') : null, [firestore]);
+  const { data: invoices, loading: isLoading } = useCollection(invoicesCollection);
 
-  useEffect(() => {
-    try {
-      const storedInvoices = localStorage.getItem(INVOICES_STORAGE_KEY);
-      if (storedInvoices) {
-        setInvoices(JSON.parse(storedInvoices));
-      }
-    } catch (error) {
-      console.error('Failed to parse invoices from localStorage', error);
-    }
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem(INVOICES_STORAGE_KEY, JSON.stringify(invoices));
-    }
-  }, [invoices, isLoading]);
-
-  const getNewInvoiceId = useCallback(() => {
-    if (invoices.length === 0) {
-      return 'INV-001';
-    }
-    const latestInvoice = invoices.reduce((latest, current) => {
-        const latestNum = parseInt(latest.id.split('-')[1], 10);
-        const currentNum = parseInt(current.id.split('-')[1], 10);
-        return currentNum > latestNum ? current : latest;
-    }, invoices[0]);
+  const addInvoice = async (invoice: Omit<Invoice, 'id'>) => {
+    if (!invoicesCollection) throw new Error("Firestore not initialized");
     
-    const lastIdNum = parseInt(latestInvoice.id.split('-')[1], 10);
-    const newIdNum = lastIdNum + 1;
-    return `INV-${String(newIdNum).padStart(3, '0')}`;
-  }, [invoices]);
-
-  const addInvoice = (invoice: Omit<Invoice, 'id'>) => {
-    const newInvoice = { ...invoice, id: getNewInvoiceId() };
-    setInvoices((prev) => [...prev, newInvoice]);
-    return newInvoice;
-  };
-
-  const bulkAddInvoices = (newInvoices: Invoice[]) => {
-    setInvoices(newInvoices);
+    const docRef = await addDoc(invoicesCollection, invoice);
+    return { ...invoice, id: docRef.id };
   };
   
   const getInvoiceById = (id: string) => {
-    return invoices.find((invoice) => invoice.id === id);
+    return invoices?.find((invoice) => invoice.id === id);
   };
 
-  const updateInvoice = (id: string, updatedInvoice: Partial<Invoice>) => {
-    setInvoices((prev) =>
-      prev.map((invoice) =>
-        invoice.id === id ? { ...invoice, ...updatedInvoice } : invoice
-      )
-    );
+  const updateInvoice = async (id: string, updatedInvoice: Partial<Omit<Invoice, 'id'>>) => {
+    if (!firestore) throw new Error("Firestore not initialized");
+    const docRef = doc(firestore, 'invoices', id);
+    await updateDoc(docRef, updatedInvoice);
   };
 
-  const deleteInvoice = (id: string) => {
-    setInvoices((prev) => prev.filter((invoice) => invoice.id !== id));
+  const deleteInvoice = async (id: string) => {
+    if (!firestore) throw new Error("Firestore not initialized");
+    const docRef = doc(firestore, 'invoices', id);
+    await deleteDoc(docRef);
   };
   
   return {
-    invoices,
+    invoices: invoices || [],
     isLoading,
-    getNewInvoiceId,
     addInvoice,
-    bulkAddInvoices,
     getInvoiceById,
     updateInvoice,
     deleteInvoice,

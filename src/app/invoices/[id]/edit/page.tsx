@@ -25,7 +25,7 @@ export default function EditInvoicePage() {
     return <Skeleton className="h-[842px] w-[595px] mx-auto" />;
   }
 
-  if (!invoice) {
+  if (!invoice && !isLoading) {
     return <div className="text-center py-20">Invoice not found.</div>;
   }
 
