@@ -83,7 +83,7 @@ export default function InvoicePage() {
   
   return (
     <>
-        <div className="w-full max-w-[595px] mx-auto flex justify-end gap-2 no-print mb-8">
+        <div className="no-print w-full max-w-[800px] mx-auto flex justify-end gap-2 mb-8">
             <Button variant="outline" onClick={() => router.push(`/invoices/${invoice.id}/edit`)}>
                 <Edit className="mr-2 h-4 w-4" /> Edit
             </Button>
@@ -94,10 +94,7 @@ export default function InvoicePage() {
                 <Printer className="mr-2 h-4 w-4" /> Print / Save as PDF
             </Button>
         </div>
-        <div className="printable-area hidden">
-             <InvoicePreview invoice={invoice} />
-        </div>
-        <div className="no-print flex justify-center">
+        <div id="invoice-preview" className="flex justify-center">
             <InvoicePreview invoice={invoice} />
         </div>
     </>

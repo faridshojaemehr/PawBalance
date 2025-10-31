@@ -86,12 +86,18 @@
 
 @media print {
   body {
-    background-color: white;
+    background-color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .no-print {
     display: none !important;
   }
-  .printable-area {
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  #invoice-preview {
     display: block !important;
     position: absolute;
     left: 0;
@@ -101,8 +107,11 @@
     padding: 0;
     margin: 0;
   }
-  main {
-    padding: 0 !important;
-    margin: 0 !important;
+  #invoice-preview .shadow-lg {
+    box-shadow: none !important;
+  }
+  #invoice-preview .w-\[210mm\] {
+    width: 100% !important;
+    height: 100% !important;
   }
 }
