@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "postinstall": "prisma generate",
     "prisma:migrate:dev": "cross-env POSTGRES_PRISMA_URL=\"postgresql://neondb_owner:npg_yHTo2kewdg0Y@ep-shy-fog-ag14te8a-pooler.c-2.eu-central-1.aws.neon.tech/neondb?connect_timeout=15&sslmode=require\" POSTGRES_URL_NON_POOLING=\"postgresql://neondb_owner:npg_yHTo2kewdg0Y@ep-shy-fog-ag14te8a.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require\" prisma migrate dev",
     "prisma:init": "cross-env POSTGRES_PRISMA_URL=\"postgresql://neondb_owner:npg_yHTo2kewdg0Y@ep-shy-fog-ag14te8a-pooler.c-2.eu-central-1.aws.neon.tech/neondb?connect_timeout=15&sslmode=require\" POSTGRES_URL_NON_POOLING=\"postgresql://neondb_owner:npg_yHTo2kewdg0Y@ep-shy-fog-ag14te8a.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require\" prisma init --db --output ../app/generated/prisma"
   },
