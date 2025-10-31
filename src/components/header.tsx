@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { FilePlus2 } from 'lucide-react';
