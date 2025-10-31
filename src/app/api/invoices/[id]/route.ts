@@ -29,8 +29,9 @@ async function writeInvoiceData(data: InvoiceData) {
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
+    const { id } = await params;
     const data = await readInvoiceData();
-    const invoice = data.invoices.find(inv => inv.id === params.id);
+    const invoice = data.invoices.find(inv => inv.id === id);
 
     if (invoice) {
       return NextResponse.json(invoice);
@@ -48,13 +49,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const updatedInvoiceData = await request.json();
     const data = await readInvoiceData();
     
-    const invoiceIndex = data.invoices.findIndex(inv => inv.id === params.id);
+    const { id } = await params;
+    const invoiceIndex = data.invoices.findIndex(inv => inv.id === id);
 
     if (invoiceIndex === -1) {
       return NextResponse.json({ message: 'Invoice not found.' }, { status: 404 });
     }
 
-    data.invoices[invoiceIndex] = { ...data.invoices[invoiceIndex], ...updatedInvoiceData, id: params.id };
+    data.invoices[invoiceIndex] = { ...data.invoices[invoiceIndex], ...updatedInvoiceData, id: id };
     await writeInvoiceData(data);
 
     return NextResponse.json(data.invoices[invoiceIndex]);
@@ -66,14 +68,15 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
+    const { id } = await params;
     const data = await readInvoiceData();
-    const invoiceExists = data.invoices.some(inv => inv.id === params.id);
+    const invoiceExists = data.invoices.some(inv => inv.id === id);
 
     if (!invoiceExists) {
       return NextResponse.json({ message: 'Invoice not found.' }, { status: 404 });
     }
 
-    data.invoices = data.invoices.filter(inv => inv.id !== params.id);
+    data.invoices = data.invoices.filter(inv => inv.id !== id);
     await writeInvoiceData(data);
 
     return new NextResponse(null, { status: 204 }); // No Content
