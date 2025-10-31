@@ -7,10 +7,11 @@ import {type FirebaseOptions} from 'firebase/app';
  * The Firebase configuration object.
  */
 export const firebaseConfig: FirebaseOptions = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyBRY1g62BDLrmzA6iW0xjm_cbFNjvPxXb8",
+  authDomain: "invoiceflow-b6fbb.firebaseapp.com",
+  projectId: "invoiceflow-b6fbb",
+  storageBucket: "invoiceflow-b6fbb.appspot.com",
+  messagingSenderId: "250376740940",
+  appId: "1:250376740940:web:ebe3101cf8ed90bf6b94e9",
+  measurementId: "G-N19ZZCBZLK"
 };

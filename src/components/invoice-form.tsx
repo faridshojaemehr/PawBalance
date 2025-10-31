@@ -143,41 +143,46 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
             title: 'Logo updated!',
             description: 'Your new company logo has been saved.',
         });
-        // This is a workaround to trigger a re-render in the header
         window.dispatchEvent(new Event('storage'));
       };
       reader.readAsDataURL(file);
     }
   };
   
-  const onSubmit = async (data: InvoiceFormValues) => {
+  const onSubmit = (data: InvoiceFormValues) => {
     const invoiceData = {
       ...data,
       invoiceDate: data.invoiceDate.toISOString(),
       dueDate: data.dueDate.toISOString(),
     };
 
-    try {
-      if (isEditing && invoice?.id) {
-        await updateInvoice(invoice.id, invoiceData);
+    if (isEditing && invoice?.id) {
+      updateInvoice(invoice.id, invoiceData).then(() => {
         toast({
           title: 'Invoice Updated!',
           description: `Invoice ${invoice.id} has been successfully updated.`,
         });
         router.push(`/invoices/${invoice.id}`);
-      } else {
-        const newInvoice = await addInvoice(invoiceData);
+      }).catch(() => {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem with your request.',
+        });
+      });
+    } else {
+      addInvoice(invoiceData).then((newInvoice) => {
         toast({
           title: 'Invoice Saved!',
           description: 'A new invoice has been successfully created.',
         });
         router.push(`/invoices/${newInvoice.id}`);
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: 'There was a problem with your request.',
+      }).catch(() => {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem with your request.',
+        });
       });
     }
   };
