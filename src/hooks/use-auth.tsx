@@ -49,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         if (data.success) {
           sessionStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('jwt_token', data.token); // Store the JWT token
           setIsAuthenticated(true);
           return true;
         }

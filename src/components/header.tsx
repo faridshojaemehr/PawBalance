@@ -41,12 +41,12 @@ export default function Header() {
             <Button variant="ghost" asChild>
                 <Link href="/expenses">Expenses</Link>
             </Button>
-            <Button asChild>
+            {/* <Button asChild>
               <Link href="/invoices/new">
                 <FilePlus2 className="mr-2 h-4 w-4" />
                 Create New Invoice
               </Link>
-            </Button>
+            </Button> */}
             {isAuthenticated && (
               <Button variant="outline" onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />

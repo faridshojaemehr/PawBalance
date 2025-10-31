@@ -13,7 +13,12 @@ export function useInvoices() {
     const fetchInvoices = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("/api/invoices");
+        const token = localStorage.getItem('jwt_token'); // Assuming token is stored in localStorage
+        const response = await fetch("/api/invoices", {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch invoices");
         }
@@ -36,9 +41,13 @@ export function useInvoices() {
 
   const addInvoice = async (invoice: Omit<Invoice, "id">) => {
     try {
+      const token = localStorage.getItem('jwt_token');
       const response = await fetch("/api/invoices", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify(invoice),
       });
       if (!response.ok) {
@@ -68,9 +77,13 @@ export function useInvoices() {
 
   const updateInvoice = async (id: string, updatedInvoiceData: Partial<Omit<Invoice, 'id'>>) => {
     try {
+      const token = localStorage.getItem('jwt_token');
       const response = await fetch(`/api/invoices/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify(updatedInvoiceData),
       });
       if (!response.ok) {
@@ -96,8 +109,12 @@ export function useInvoices() {
   
   const deleteInvoice = async (id: string) => {
     try {
+      const token = localStorage.getItem('jwt_token');
       const response = await fetch(`/api/invoices/${id}`, {
         method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
       if (!response.ok) {
         throw new Error("Failed to delete invoice");
@@ -153,7 +170,10 @@ export function useInvoices() {
 
         const response = await fetch('/api/invoices/bulk-update', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
+          },
           body: JSON.stringify(restoredInvoices),
         });
 
