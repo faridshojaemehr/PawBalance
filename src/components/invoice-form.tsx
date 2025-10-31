@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -358,7 +359,7 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
                             <FormItem><FormLabel>Account Name</FormLabel><FormControl><Input {...field} placeholder="e.g. Acme Inc." /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField name="paymentDetails.iban" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>IBAN</FormLabel><FormControl><Input {...field} placeholder="e.g. DE89 3704 0044 0532 0130 00" /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>IBAN</FormLabel><FormControl><Input {...field} placeholder="e.g. DE89 3704 0044 0532 0130 00" /></FormControl><FormMessage /></FormMessage>
                         )} />
                     </CardContent>
                 </Card>
