@@ -156,35 +156,24 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
       dueDate: data.dueDate.toISOString(),
     };
 
-    if (isEditing && invoice?.id) {
-      updateInvoice(invoice.id, invoiceData).then(() => {
-        toast({
-          title: 'Invoice Updated!',
-          description: `Invoice ${invoice.id} has been successfully updated.`,
-        });
-        router.push(`/invoices/${invoice.id}`);
-      }).catch(() => {
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'There was a problem with your request.',
-        });
+    const promise = isEditing && invoice?.id
+      ? updateInvoice(invoice.id, invoiceData)
+      : addInvoice(invoiceData);
+
+    promise.then((result) => {
+      const newInvoiceId = isEditing ? invoice.id : (result as Invoice).id;
+      toast({
+        title: isEditing ? 'Invoice Updated!' : 'Invoice Saved!',
+        description: `Invoice ${newInvoiceId} has been successfully ${isEditing ? 'updated' : 'created'}.`,
       });
-    } else {
-      addInvoice(invoiceData).then((newInvoice) => {
-        toast({
-          title: 'Invoice Saved!',
-          description: 'A new invoice has been successfully created.',
-        });
-        router.push(`/invoices/${newInvoice.id}`);
-      }).catch(() => {
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'There was a problem with your request.',
-        });
+      router.push(`/invoices/${newInvoiceId}`);
+    }).catch(() => {
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'There was a problem with your request.',
       });
-    }
+    });
   };
 
   return (
@@ -326,13 +315,13 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
                   <div className="col-span-2">
                     {index === 0 && <FormLabel>Quantity</FormLabel>}
                     <FormField name={`items.${index}.quantity`} control={form.control} render={({ field }) => (
-                      <FormItem><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormMessage>
+                      <FormItem><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                   </div>
                    <div className="col-span-2">
                     {index === 0 && <FormLabel>Price</FormLabel>}
                     <FormField name={`items.${index}.price`} control={form.control} render={({ field }) => (
-                      <FormItem><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormMessage>
+                      <FormItem><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                   </div>
                   <div className="col-span-2">
@@ -364,7 +353,7 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
                             <FormItem><FormLabel>Account Name</FormLabel><FormControl><Input {...field} placeholder="e.g. Acme Inc." /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField name="paymentDetails.iban" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>IBAN</FormLabel><FormControl><Input {...field} placeholder="e.g. DE89 3704 0044 0532 0130 00" /></FormControl><FormMessage /></FormMessage>
+                            <FormItem><FormLabel>IBAN</FormLabel><FormControl><Input {...field} placeholder="e.g. DE89 3704 0044 0532 0130 00" /></FormControl><FormMessage /></FormItem>
                         )} />
                     </CardContent>
                 </Card>
@@ -382,7 +371,7 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
                     <CardHeader><CardTitle>Tax</CardTitle></CardHeader>
                     <CardContent>
                         <FormField name="taxRate" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Tax Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormMessage>
+                            <FormItem><FormLabel>Tax Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </CardContent>
                 </Card>
