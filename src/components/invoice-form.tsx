@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, PlusCircle, Save, Trash2 } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Save, Trash2, Upload } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -30,8 +30,9 @@ import { useInvoices } from '@/hooks/use-invoices';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect } from 'react';
+import { ChangeEvent, useEffect, useRef } from 'react';
 import type { Invoice } from '@/lib/types';
+import Image from 'next/image';
 
 const addressSchema = z.object({
   street: z.string().min(1, 'Street is required'),
@@ -68,6 +69,7 @@ const formSchema = z.object({
   notes: z.string().optional(),
   taxRate: z.coerce.number().min(0, 'Tax rate cannot be negative').optional(),
   paymentDetails: paymentDetailsSchema.optional(),
+  logoUrl: z.string().optional(),
 });
 
 type InvoiceFormValues = z.infer<typeof formSchema>;
@@ -82,6 +84,7 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
   const { addInvoice, updateInvoice, getNewInvoiceId } = useInvoices();
   const newInvoiceId = getNewInvoiceId();
   const isEditing = !!invoice;
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(formSchema),
@@ -95,13 +98,19 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
       notes: '',
       taxRate: 0,
       paymentDetails: { iban: '', accountName: '', bankName: '' },
+      logoUrl: '',
     },
   });
   
   useEffect(() => {
+    const storedLogo = localStorage.getItem('company-logo');
+    if (storedLogo) {
+        form.setValue('logoUrl', storedLogo);
+    }
     if (invoice) {
       form.reset({
         ...invoice,
+        logoUrl: storedLogo || invoice.logoUrl,
         invoiceDate: new Date(invoice.invoiceDate),
         dueDate: new Date(invoice.dueDate),
         items: invoice.items.map(item => ({...item})) // remove id
@@ -116,10 +125,28 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
   
   const watchItems = form.watch('items');
   const watchTaxRate = form.watch('taxRate');
+  const watchLogoUrl = form.watch('logoUrl');
   
   const subtotal = watchItems.reduce((acc, item) => acc + (item.quantity || 0) * (item.price || 0), 0);
   const tax = subtotal * ((watchTaxRate || 0) / 100);
   const total = subtotal + tax;
+
+  const handleLogoUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        localStorage.setItem('company-logo', dataUrl);
+        form.setValue('logoUrl', dataUrl);
+        toast({
+            title: 'Logo updated!',
+            description: 'Your new company logo has been saved.',
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   
   function onSubmit(data: InvoiceFormValues) {
     const invoiceData = {
@@ -178,6 +205,19 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
                   <FormItem><FormLabel>ZIP</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
               </div>
+              <FormItem>
+                <FormLabel>Company Logo</FormLabel>
+                <div className="flex items-center gap-4">
+                    {watchLogoUrl && <Image src={watchLogoUrl} alt="company logo" width={60} height={60} className="rounded-md object-cover" />}
+                    <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
+                        <Upload className="mr-2 h-4 w-4" /> Upload Logo
+                    </Button>
+                    <FormControl>
+                        <Input type="file" className="hidden" ref={logoInputRef} onChange={handleLogoUpload} accept="image/*" />
+                    </FormControl>
+                </div>
+                <FormMessage />
+              </FormItem>
             </CardContent>
           </Card>
           <Card>

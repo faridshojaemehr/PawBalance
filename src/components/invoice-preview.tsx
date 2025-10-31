@@ -24,7 +24,7 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
     <Card className="w-[210mm] min-h-[297mm] mx-auto p-8 shadow-lg bg-white text-black relative">
       <div className="flex justify-between items-start mb-8">
         <div className="flex items-center gap-4">
-          <Image src="https://picsum.photos/seed/logo/60/60" alt="Company Logo" width={60} height={60} className="rounded-md" data-ai-hint="logo" />
+          <Image src={invoice.logoUrl || "https://picsum.photos/seed/logo/60/60"} alt="Company Logo" width={60} height={60} className="rounded-md object-cover" data-ai-hint="logo" />
           <div>
             <h1 className="text-3xl font-bold text-gray-800">{invoice.sender.name}</h1>
             <div className="text-gray-600">

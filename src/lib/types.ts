@@ -42,4 +42,5 @@ export interface Invoice {
   notes?: string;
   taxRate?: number;
   paymentDetails?: PaymentDetails;
+  logoUrl?: string;
 }
