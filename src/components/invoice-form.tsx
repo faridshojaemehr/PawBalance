@@ -152,33 +152,33 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
   
   async function onSubmit(data: InvoiceFormValues) {
     const invoiceData = {
-        ...data,
-        invoiceDate: data.invoiceDate.toISOString(),
-        dueDate: data.dueDate.toISOString(),
+      ...data,
+      invoiceDate: data.invoiceDate.toISOString(),
+      dueDate: data.dueDate.toISOString(),
     };
-
+  
     try {
-        if (isEditing && invoice?.id) {
-            await updateInvoice(invoice.id, invoiceData);
-            toast({
-                title: 'Invoice Updated!',
-                description: `Invoice ${invoice.id} has been successfully updated.`,
-            });
-            router.push(`/invoices/${invoice.id}`);
-        } else {
-            const newInvoice = await addInvoice(invoiceData);
-            toast({
-                title: 'Invoice Saved!',
-                description: `A new invoice has been successfully created.`,
-            });
-            router.push(`/invoices/${newInvoice.id}`);
-        }
-    } catch (error) {
+      if (isEditing && invoice?.id) {
+        await updateInvoice(invoice.id, invoiceData);
         toast({
-            variant: "destructive",
-            title: "Uh oh! Something went wrong.",
-            description: "There was a problem with your request.",
+          title: 'Invoice Updated!',
+          description: `Invoice ${invoice.id} has been successfully updated.`,
         });
+        router.push(`/invoices/${invoice.id}`);
+      } else {
+        const newInvoice = await addInvoice(invoiceData);
+        toast({
+          title: 'Invoice Saved!',
+          description: `A new invoice has been successfully created.`,
+        });
+        router.push(`/invoices/${newInvoice.id}`);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "There was a problem with your request.",
+      });
     }
   }
 
