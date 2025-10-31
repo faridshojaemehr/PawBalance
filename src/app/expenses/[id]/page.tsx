@@ -8,8 +8,6 @@ import { Edit, Printer } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Expense } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 export default function ExpensePage() {
   const params = useParams();
@@ -28,49 +26,35 @@ export default function ExpensePage() {
   
   const handlePrint = async () => {
     const expenseElement = document.getElementById('expense-preview-container');
-    if (!expenseElement) return;
+    console.log("Expense Element:", expenseElement); // Log the element
+
+    if (!expenseElement) {
+      console.error("Expense preview container not found.");
+      return;
+    }
+
+    // Dynamically import html2pdf.js
+    const html2pdf = (await import('html2pdf.js')).default;
 
     document.body.classList.add('print-active');
 
-    const canvas = await html2canvas(expenseElement, {
-      scale: 4, // Increased scale for better quality
-      useCORS: true,
-      logging: true,
-      windowWidth: expenseElement.scrollWidth,
-      windowHeight: expenseElement.scrollHeight,
-    });
-    
-    document.body.classList.remove('print-active');
+    const options: any = {
+      margin: 10,
+      filename: `Expense-${expense?.id}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 4, useCORS: true }, // Use scale 4 for better quality, as in original
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } // Handle page breaks
+    };
 
-    const imgData = canvas.toDataURL('image/png');
-    
-    const pdfWidth = 210;
-    const pdfHeight = 297;
-
-    const pdf = new jsPDF({
-      orientation: 'p',
-      unit: 'mm',
-      format: 'a4',
-    });
-
-    const imgProps = pdf.getImageProperties(imgData);
-    const imgWidth = pdfWidth;
-    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-    
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-    heightLeft -= pdfHeight;
-
-    while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pdfHeight;
+    try {
+      await html2pdf().set(options).from(expenseElement).save();
+      console.log("PDF generated successfully.");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      document.body.classList.remove('print-active');
     }
-    
-    pdf.save(`Expense-${expense?.id}.pdf`);
   };
 
   if (isLoading) {
@@ -96,7 +80,7 @@ export default function ExpensePage() {
   }
 
   return (
-    <>
+    <div className="max-w-[1200px] mx-auto">
         <div className="no-print w-full max-w-[800px] mx-auto flex justify-end gap-2 mb-8">
             <Button variant="outline" onClick={() => router.push(`/expenses/${expense.id}/edit`)}>
                 <Edit className="mr-2 h-4 w-4" /> Edit
@@ -108,6 +92,6 @@ export default function ExpensePage() {
         <div id="expense-preview-container" className="flex justify-center">
             <ExpensePreview expense={expense} />
         </div>
-    </>
+    </div>
   );
 }

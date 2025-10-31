@@ -37,6 +37,10 @@ export async function POST(request: Request) {
     return NextResponse.json(newExpense, { status: 201 });
   } catch (error) {
     console.error('Failed to create expense:', error);
-    return NextResponse.json({ message: 'Failed to create expense.', error: error.message }, { status: 500 });
+    let errorMessage = 'An unknown error occurred.';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    return NextResponse.json({ message: 'Failed to create expense.', error: errorMessage }, { status: 500 });
   }
 }

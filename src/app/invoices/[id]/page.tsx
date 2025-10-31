@@ -1,24 +1,20 @@
-'use client';
+"use client";
 
-import { useParams, useRouter } from 'next/navigation';
-import { useInvoices } from '@/hooks/use-invoices';
-import InvoicePreview from '@/components/invoice-preview';
-import { Button } from '@/components/ui/button';
-import { Edit, Printer, FileDown } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import type { Invoice } from '@/lib/types';
-import { Skeleton } from '@/components/ui/skeleton';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import { formatCurrency } from '@/lib/utils';
+import { useParams, useRouter } from "next/navigation";
+import { useInvoices } from "@/hooks/use-invoices";
+import InvoicePreview from "@/components/invoice-preview";
+import { Button } from "@/components/ui/button";
+import { Edit, Printer } from "lucide-react";
+import { useEffect, useState } from "react";
+import type { Invoice } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function InvoicePage() {
   const params = useParams();
   const router = useRouter();
   const { getInvoiceById, isLoading } = useInvoices();
   const [invoice, setInvoice] = useState<Invoice | undefined>(undefined);
-  
+
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   useEffect(() => {
@@ -27,134 +23,78 @@ export default function InvoicePage() {
       setInvoice(foundInvoice);
     }
   }, [id, getInvoiceById, isLoading]);
-  
+
   const handlePrint = async () => {
-    const invoiceElement = document.getElementById('invoice-preview-container');
-    if (!invoiceElement) return;
+    const invoiceElement = document.getElementById("invoice-preview-container");
 
-    // Temporarily apply print-specific styles
-    document.body.classList.add('print-active');
-
-    const canvas = await html2canvas(invoiceElement, {
-      scale: 4, // Increased scale for even better quality
-      useCORS: true,
-      logging: true,
-      windowWidth: invoiceElement.scrollWidth, // Use scrollWidth for full content width
-      windowHeight: invoiceElement.scrollHeight, // Use scrollHeight for full content height
-    });
-    
-    // Remove print-specific styles
-    document.body.classList.remove('print-active');
-
-    const imgData = canvas.toDataURL('image/png');
-    
-    // A4 dimensions in mm
-    const pdfWidth = 210;
-    const pdfHeight = 297;
-
-    const pdf = new jsPDF({
-      orientation: 'p',
-      unit: 'mm',
-      format: 'a4',
-    });
-
-    const imgProps = pdf.getImageProperties(imgData);
-    const imgWidth = pdfWidth;
-    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-    
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-    heightLeft -= pdfHeight;
-
-    while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pdfHeight;
+    if (!invoiceElement) {
+      console.error("Invoice preview container not found.");
+      return;
     }
-    
-    pdf.save(`Invoice-${invoice?.id}.pdf`);
-  };
 
-  const handleDownloadExcel = () => {
-    if (!invoice) return;
+    const html2pdf = (await import('html2pdf.js')).default;
 
-    const itemsData = invoice.items.map(item => ({
-      Description: item.description,
-      Quantity: item.quantity,
-      'Unit Price': item.price,
-      Total: item.quantity * item.price,
-    }));
+    const options: any = {
+      margin: 10,
+      filename: `Invoice-${invoice?.id}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 4, useCORS: true }, // Use scale 4 for better quality, as in original
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["avoid-all", "css", "legacy"] }, // Handle page breaks
+    };
 
-    const subtotal = itemsData.reduce((acc, item) => acc + item.Total, 0);
-    const tax = subtotal * ((invoice.taxRate || 0) / 100);
-    const total = subtotal + tax;
-    
-    const summaryData = [
-        { Item: 'Subtotal', Amount: formatCurrency(subtotal) },
-        { Item: `Tax (${invoice.taxRate || 0}%)`, Amount: formatCurrency(tax) },
-        { Item: 'Total', Amount: formatCurrency(total) },
-    ];
-
-    const clientInfo = [
-        { Info: 'Invoice #', Value: invoice.id },
-        { Info: 'Client Name', Value: invoice.client.name },
-        { Info: 'Client Email', Value: invoice.client.email },
-        { Info: 'Due Date', Value: invoice.dueDate },
-    ]
-
-    const itemsSheet = XLSX.utils.json_to_sheet(itemsData);
-    const summarySheet = XLSX.utils.json_to_sheet(summaryData, { skipHeader: true });
-    const clientSheet = XLSX.utils.json_to_sheet(clientInfo, { skipHeader: true });
-    
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, clientSheet, 'Client Info');
-    XLSX.utils.book_append_sheet(workbook, itemsSheet, 'Invoice Items');
-    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
-
-    XLSX.writeFile(workbook, `Invoice-${invoice.id}.xlsx`);
+    try {
+      await html2pdf().set(options).from(invoiceElement).save();
+      console.log("PDF generated successfully.");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      // Remove print-specific styles
+      // document.body.classList.remove("print-active");
+    }
   };
 
   if (isLoading) {
     return (
-        <div className="flex flex-col items-center gap-8">
-            <Skeleton className="h-16 w-full max-w-[800px]" />
-            <Skeleton className="h-[842px] w-[595px]" />
-        </div>
+      <div className="flex flex-col items-center gap-8">
+        <Skeleton className="h-16 w-full max-w-[800px]" />
+        <Skeleton className="h-[842px] w-[595px]" />
+      </div>
     );
   }
 
   if (!invoice && !isLoading) {
     return <div className="text-center py-20">Invoice not found.</div>;
   }
-  
+
   if (!invoice) {
-      return (
-        <div className="flex flex-col items-center gap-8">
-            <Skeleton className="h-16 w-full max-w-[800px]" />
-            <Skeleton className="h-[842px] w-[595px]" />
-        </div>
-      )
+    return (
+      <div className="flex flex-col items-center gap-8">
+        <Skeleton className="h-16 w-full max-w-[800px]" />
+        <Skeleton className="h-[842px] w-[595px]" />
+      </div>
+    );
   }
 
   return (
-    <>
-        <div className="no-print w-full max-w-[800px] mx-auto flex justify-end gap-2 mb-8">
-            <Button variant="outline" onClick={() => router.push(`/invoices/${invoice.id}/edit`)}>
-                <Edit className="mr-2 h-4 w-4" /> Edit
-            </Button>
-            <Button onClick={handleDownloadExcel}>
+    <div className="max-w-[1200px] mx-auto">
+      <div className="no-print w-full max-w-[800px] mx-auto flex justify-end gap-2 mb-8">
+        <Button
+          variant="outline"
+          onClick={() => router.push(`/invoices/${invoice.id}/edit`)}
+        >
+          <Edit className="mr-2 h-4 w-4" /> Edit
+        </Button>
+        {/* <Button onClick={handleDownloadExcel}>
                 <FileDown className="mr-2 h-4 w-4" /> Download as Excel
-            </Button>
-            <Button onClick={handlePrint} className="bg-accent hover:bg-accent/90">
-                <Printer className="mr-2 h-4 w-4" /> Save as PDF
-            </Button>
-        </div>
-        <div id="invoice-preview-container" className="flex justify-center">
-            <InvoicePreview invoice={invoice} />
-        </div>
-    </>
+            </Button> */}
+        <Button onClick={handlePrint} className="bg-accent hover:bg-accent/90">
+          <Printer className="mr-2 h-4 w-4" /> Save as PDF
+        </Button>
+      </div>
+      <div id="invoice-preview-container" className="flex justify-center">
+        <InvoicePreview invoice={invoice} />
+      </div>
+    </div>
   );
 }

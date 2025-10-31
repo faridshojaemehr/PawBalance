@@ -2,7 +2,6 @@ import type { Invoice } from "@/lib/types";
 import { format } from "date-fns";
 import { Card, CardContent } from "./ui/card";
 import { Separator } from "./ui/separator";
-import Image from "next/image";
 import { formatCurrency } from "@/lib/utils";
 
 type InvoicePreviewProps = {
@@ -31,16 +30,15 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
   );
 
   return (
-    <Card className="w-[210mm] min-h-[297mm] mx-auto p-8 shadow-lg bg-white text-black relative">
+    <Card className="w-[210mm] min-h-[275mm] mx-auto p-8 shadow-lg bg-white text-black relative text-base">
       <div className="flex justify-between items-start mb-8">
         <div className="flex items-center gap-4">
-          <Image
+          <img
             src={invoice.logoUrl || "https://picsum.photos/seed/logo/60/60"}
             alt="Company Logo"
             width={60}
             height={60}
             className="rounded-md object-cover"
-            data-ai-hint="logo"
           />
           <div>
             <h1 className="text-3xl font-bold text-gray-800">
@@ -62,29 +60,28 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
 
       <div className="grid grid-cols-2 gap-8 mb-8">
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase">
-            Bill To
-          </h3>
-          <div className="mt-2 text-gray-800">
+                      <h3 className="text-base font-semibold text-gray-500 uppercase">
+                      Bill To
+                    </h3>          <div className="mt-2 text-gray-800">
             <p className="font-bold">{invoice.client.name}</p>
             <AddressDisplay address={invoice.client.address} />
             <p>{invoice.client.email}</p>
           </div>
         </div>
         <div className="text-right">
-          <div className="grid grid-cols-2 text-sm">
+          <div className="grid grid-cols-2 text-base">
             <span className="font-semibold text-gray-500">Invoice Date:</span>
             <span className="text-gray-800">
               {format(new Date(invoice.invoiceDate), "MMM d, yyyy")}
             </span>
           </div>
-          <div className="grid grid-cols-2 text-sm mt-1">
+          <div className="grid grid-cols-2 text-base mt-1">
             <span className="font-semibold text-gray-500">Due Date:</span>
             <span className="text-gray-800">
               {format(new Date(invoice.dueDate), "MMM d, yyyy")}
             </span>
           </div>
-          <div className="grid grid-cols-2 text-sm mt-1">
+          <div className="grid grid-cols-2 text-base mt-1">
             <span className="font-semibold text-gray-500">Status:</span>
             <span className="font-bold text-gray-800 uppercase">
               {invoice.status}
@@ -95,7 +92,7 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
 
       <table className="w-full text-left table-auto">
         <thead>
-          <tr className="bg-gray-100 text-sm text-gray-600 uppercase">
+          <tr className="bg-gray-100 text-base text-gray-600 uppercase">
             <th className="p-3 font-semibold">Description</th>
             <th className="p-3 font-semibold text-center">Qty</th>
             <th className="p-3 font-semibold text-right">Unit Price</th>
@@ -123,10 +120,10 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
               invoice.paymentDetails.accountName ||
               invoice.paymentDetails.iban) && (
               <div className="mt-8">
-                <h4 className="text-sm font-semibold text-gray-500 uppercase">
+                <h4 className="text-base font-semibold text-gray-500 uppercase">
                   Payment Details
                 </h4>
-                <div className="text-sm text-gray-600 mt-2 space-y-1">
+                <div className="text-base text-gray-600 mt-2 space-y-1">
                   {invoice.paymentDetails.bankName && (
                     <p>
                       <strong>Bank:</strong> {invoice.paymentDetails.bankName}
@@ -148,20 +145,20 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
             )}
           {invoice.notes && (
             <div className="mt-8">
-              <h4 className="text-sm font-semibold text-gray-500 uppercase">
+              <h4 className="text-base font-semibold text-gray-500 uppercase">
                 Notes
               </h4>
-              <p className="text-sm text-gray-600 mt-2">{invoice.notes}</p>
+              <p className="text-base text-gray-600 mt-2">{invoice.notes}</p>
             </div>
           )}
         </div>
         <div className="w-full max-w-xs space-y-3">
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-base">
             <span className="text-gray-600">Subtotal</span>
             <span className="text-gray-800">{formatCurrency(subtotal)}</span>
           </div>
           {invoice.taxRate && invoice.taxRate > 0 ? (
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-base">
               <span className="text-gray-600">
                 Tax ({invoice.taxRate || 0}%)
               </span>

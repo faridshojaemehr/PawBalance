@@ -3,6 +3,19 @@ import { sql } from '@vercel/postgres';
 import fs from 'fs';
 import path from 'path';
 
+interface Expense {
+  description: string;
+  amount: number;
+  date: string;
+}
+
+interface Invoice {
+  customer_id: string;
+  amount: number;
+  status: string;
+  date: string;
+}
+
 const expenses = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'expenses.json'), 'utf8'));
 const invoices = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'invoices.json'), 'utf8'));
 
@@ -24,7 +37,7 @@ async function seedExpenses() {
     // Insert data into the "expenses" table
     const insertedExpenses = await Promise.all(
       expenses.map(
-        (expense) => sql`
+        (expense: Expense) => sql`
         INSERT INTO expenses (description, amount, date)
         VALUES (${expense.description}, ${expense.amount}, ${expense.date})
         ON CONFLICT (id) DO NOTHING;
@@ -64,7 +77,7 @@ async function seedInvoices() {
     // Insert data into the "invoices" table
     const insertedInvoices = await Promise.all(
       invoices.map(
-        (invoice) => sql`
+        (invoice: Invoice) => sql`
         INSERT INTO invoices (customer_id, amount, status, date)
         VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
         ON CONFLICT (id) DO NOTHING;

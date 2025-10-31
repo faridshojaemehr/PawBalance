@@ -10,7 +10,7 @@ type ExpensePreviewProps = {
 
 export default function ExpensePreview({ expense }: ExpensePreviewProps) {
   return (
-    <Card className="w-[210mm] min-h-[297mm] mx-auto p-8 shadow-lg bg-white text-black relative">
+    <Card className="w-[210mm] min-h-[275mm] mx-auto p-8 shadow-lg bg-white text-black relative text-lg">
       <div className="flex justify-between items-start mb-8">
         <div className="flex items-center gap-4">
           {/* Assuming a logo for the user/company, or a placeholder */}
@@ -28,7 +28,7 @@ export default function ExpensePreview({ expense }: ExpensePreviewProps) {
 
       <div className="grid grid-cols-2 gap-8 mb-8">
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase">Expense Details</h3>
+          <h3 className="text-base font-semibold text-gray-500 uppercase">Expense Details</h3>
           <div className="mt-2 text-gray-800">
             <p><strong>Item Name:</strong> {expense.itemName}</p>
             <p><strong>Vendor:</strong> {expense.vendor}</p>
@@ -37,7 +37,7 @@ export default function ExpensePreview({ expense }: ExpensePreviewProps) {
           </div>
         </div>
         <div className="text-right">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase">Amount</h3>
+          <h3 className="text-base font-semibold text-gray-500 uppercase">Amount</h3>
           <p className="text-4xl font-bold text-gray-800 mt-2">{formatCurrency(expense.amount)}</p>
           {expense.receiptUrl && (
             <div className="mt-4">
@@ -51,8 +51,8 @@ export default function ExpensePreview({ expense }: ExpensePreviewProps) {
 
       {expense.description && (
         <div className="mt-8">
-          <h4 className="text-sm font-semibold text-gray-500 uppercase">Description</h4>
-          <p className="text-sm text-gray-600 mt-2">{expense.description}</p>
+          <h4 className="text-base font-semibold text-gray-500 uppercase">Description</h4>
+          <p className="text-base text-gray-600 mt-2">{expense.description}</p>
         </div>
       )}
 
