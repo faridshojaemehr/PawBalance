@@ -31,11 +31,22 @@ export default function InvoicePage() {
     const invoiceElement = document.getElementById('invoice-preview-container');
     if (!invoiceElement) return;
 
+    // Temporarily apply print-specific styles
+    document.body.classList.add('print-active');
+
     const canvas = await html2canvas(invoiceElement, {
-      scale: 2, // Higher scale for better quality
+      scale: 3, // Higher scale for better quality
       useCORS: true,
+      logging: true,
+      width: invoiceElement.offsetWidth,
+      height: invoiceElement.offsetHeight,
+      windowWidth: document.documentElement.offsetWidth,
+      windowHeight: document.documentElement.offsetHeight,
     });
     
+    // Remove print-specific styles
+    document.body.classList.remove('print-active');
+
     const imgData = canvas.toDataURL('image/png');
     
     // A4 dimensions in mm
@@ -48,19 +59,20 @@ export default function InvoicePage() {
       format: 'a4',
     });
 
+    const imgProps = pdf.getImageProperties(imgData);
     const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
     
     let heightLeft = imgHeight;
     let position = 0;
 
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
     heightLeft -= pdfHeight;
 
     while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pdfHeight;
     }
     
