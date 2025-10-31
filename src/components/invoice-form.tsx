@@ -155,20 +155,29 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
         invoiceDate: data.invoiceDate.toISOString(),
         dueDate: data.dueDate.toISOString(),
     };
-    if (isEditing && invoice?.id) {
-        await updateInvoice(invoice.id, invoiceData);
+
+    try {
+        if (isEditing && invoice?.id) {
+            await updateInvoice(invoice.id, invoiceData);
+            toast({
+                title: 'Invoice Updated!',
+                description: `Invoice ${invoice.id} has been successfully updated.`,
+            });
+            router.push(`/invoices/${invoice.id}`);
+        } else {
+            const newInvoice = await addInvoice(invoiceData);
+            toast({
+                title: 'Invoice Saved!',
+                description: `A new invoice has been successfully created.`,
+            });
+            router.push(`/invoices/${newInvoice.id}`);
+        }
+    } catch (error) {
         toast({
-            title: 'Invoice Updated!',
-            description: `Invoice ${invoice.id} has been successfully updated.`,
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "There was a problem with your request.",
         });
-        router.push(`/invoices/${invoice.id}`);
-    } else {
-        const newInvoice = await addInvoice(invoiceData);
-        toast({
-            title: 'Invoice Saved!',
-            description: `A new invoice has been successfully created.`,
-        });
-        router.push(`/invoices/${newInvoice.id}`);
     }
   }
 
@@ -367,7 +376,7 @@ export default function InvoiceForm({ invoice }: InvoiceFormProps) {
                     <CardHeader><CardTitle>Tax</CardTitle></CardHeader>
                     <CardContent>
                         <FormField name="taxRate" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Tax Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Tax Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormMessage>
                         )} />
                     </CardContent>
                 </Card>
